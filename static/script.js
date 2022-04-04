@@ -1,10 +1,10 @@
 var cursor;
 var canvas;
-var colorSelect;
+var selected;
+var selectedColor;
 
 var image = new Image();
 image.onload = function() {
-    // draw image...
     canvas.getContext('2d').drawImage(image, 0, 0);
 }
 
@@ -37,24 +37,36 @@ $(document).ready(function() {
     var cl = canvas.offsetLeft + canvas.clientLeft;
     var ct = canvas.offsetTop + canvas.clientTop;
 
-    colorSelect = document.createElement("select");
+    var colorFlex = document.createElement("div");
+    colorFlex.style.display = "flex";
+    colorFlex.style.width = "1000px";
+    colorFlex.style.height = "30px";
     fetch('/colors').then(
         data => data.json()
     ).then(
         colors => colors.map((color, index) => {
-            var option = document.createElement("option");
-            option.innerHTML = color;
-            option.value = index;
-            colorSelect.appendChild(option);
+            var colorBox = document.createElement("div");
+            colorBox.style.flexGrow = "1";
+            colorBox.style.backgroundColor = color[1];
+            colorBox.title = color[0];
+            colorBox.onclick = function() {
+                console.log(selected);
+                if (typeof selected !== 'undefined') {
+                    selected.classList.remove('selected');
+                }
+                selected = this;
+                selected.classList.add('selected');
+                selectedColor = index;
+            }
+            colorFlex.appendChild(colorBox);
         })
     );
-    document.body.appendChild(colorSelect);
+    document.body.appendChild(colorFlex);
 
-    // Add event listener for `click` events.
     canvas.addEventListener('click', function(event) {
         var x = event.pageX - cl,
             y = event.pageY - ct;
-        fetch('/image/place/' + x + '/' + y + '/' + colorSelect.value)
+        fetch('/image/place/' + x + '/' + y + '/' + selectedColor);
     });
 
     var clear = document.createElement("button");

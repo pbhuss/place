@@ -1,5 +1,6 @@
 from io import BytesIO
 
+import yaml
 from flask import Flask
 from flask import jsonify
 from flask import make_response
@@ -15,7 +16,6 @@ from main import draw_updates
 from main import get_updates
 from main import initialize_image
 from main import MULTIPLIER
-from main import palette
 from main import refresh2
 from main import save_image
 from main import update_pos
@@ -25,6 +25,7 @@ config = {
     "DEBUG": False,  # some Flask specific configs
     "CACHE_TYPE": "SimpleCache",  # Flask-Caching related configs
     "CACHE_DEFAULT_TIMEOUT": 300,
+    "TEMPLATES_AUTO_RELOAD": True,
 }
 
 size = width, height = (50, 50)
@@ -119,4 +120,6 @@ def clear():
 
 @app.route("/colors")
 def colors():
-    return jsonify(list(palette))
+    with open("colors.yaml") as fp:
+        conf = yaml.safe_load(fp)
+    return jsonify(list(conf["colors"].items()))

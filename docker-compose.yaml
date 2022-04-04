@@ -2,13 +2,38 @@ version: "3.9"
 services:
   redis:
     image: redis:6-alpine
+    volumes:
+      - "./data:/data"
+    profiles:
+      - dev
+      - prod
   flask:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile-flask
     depends_on:
       - redis
     expose:
       - 5000
-    command: uwsgi --ini instance.ini
+    profiles:
+      - prod
+    volumes:
+      - "./:/code"
+  flask-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile-flask
+    depends_on:
+      - redis
+    ports:
+      - "5000:5000"
+    profiles:
+      - dev
+    volumes:
+      - "./:/code"
+    command: ["flask", "run"]
+    environment:
+      FLASK_ENVIRONMENT: development
   nginx:
     build:
       context: .
@@ -17,3 +42,5 @@ services:
       - "443:443"
     depends_on:
       - flask
+    profiles:
+      - prod
