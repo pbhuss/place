@@ -11,7 +11,6 @@ from flask_caching import Cache
 from redis.client import Redis
 
 from main import base_image
-from main import draw_square
 from main import draw_updates
 from main import get_updates
 from main import initialize_image
@@ -111,11 +110,11 @@ def place(x: int, y: int, color: int):
     return Response(status=200)
 
 
-@app.route("/image/clear")
-def clear():
-    rc = get_redis()
-    draw_square(rc, 0, 0, width, width, "white", True)
-    return Response(status=200)
+# @app.route("/image/clear")
+# def clear():
+#     rc = get_redis()
+#     draw_square(rc, 0, 0, width, width, "white", True)
+#     return Response(status=200)
 
 
 @app.route("/colors")

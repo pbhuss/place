@@ -69,10 +69,10 @@ $(document).ready(function() {
         fetch('/image/place/' + x + '/' + y + '/' + selectedColor);
     });
 
-    var clear = document.createElement("button");
-    clear.innerHTML = "Clear";
-    clear.addEventListener('click', function(event) {
-        fetch('/image/clear');
-    });
-    document.body.appendChild(clear);
+//    var clear = document.createElement("button");
+//    clear.innerHTML = "Clear";
+//    clear.addEventListener('click', function(event) {
+//        fetch('/image/clear');
+//    });
+//    document.body.appendChild(clear);
 });
