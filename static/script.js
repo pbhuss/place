@@ -9,14 +9,20 @@ image.onload = function() {
 }
 
 function refresh() {
-    fetch('/image/' + cursor)
-        .then(response => {
-            cursor = response.headers.get('X-Cursor');
-            return response.blob();
-        })
-        .then(blob => {
-            image.src =  URL.createObjectURL(blob)
-        })
+    var path;
+    if (!cursor) {
+        path = '/image/full';
+    } else {
+        path = '/image/' + cursor;
+    }
+    fetch(path)
+    .then(response => {
+        cursor = response.headers.get('X-Cursor');
+        return response.blob();
+    })
+    .then(blob => {
+        image.src =  URL.createObjectURL(blob)
+    })
 }
 
 $(document).ready(function() {
@@ -49,8 +55,12 @@ $(document).ready(function() {
             colorBox.style.flexGrow = "1";
             colorBox.style.backgroundColor = color[1];
             colorBox.title = color[0];
+            if (!selected) {
+                selected = colorBox;
+                selectedColor = index;
+                colorBox.classList.add('selected');
+            }
             colorBox.onclick = function() {
-                console.log(selected);
                 if (typeof selected !== 'undefined') {
                     selected.classList.remove('selected');
                 }
@@ -67,6 +77,11 @@ $(document).ready(function() {
         var x = event.pageX - cl,
             y = event.pageY - ct;
         fetch('/image/place/' + x + '/' + y + '/' + selectedColor);
+        var ctx = canvas.getContext('2d');
+        ctx.beginPath();
+        ctx.fillStyle = selected.style.backgroundColor;
+        ctx.rect(Math.floor(x / 20) * 20, Math.floor(y / 20) * 20, 20, 20);
+        ctx.fill();
     });
 
 //    var clear = document.createElement("button");
