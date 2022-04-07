@@ -1,15 +1,18 @@
-var cursor;
-var canvas;
-var selected;
-var selectedColor;
+let cursor;
+let canvas;
+let selected;
+let selectedColor;
 
-var image = new Image();
-image.onload = function() {
-    canvas.getContext('2d').drawImage(image, 0, 0);
+function drawImage(data) {
+    let image = new Image();
+    image.onload = function() {
+        canvas.getContext('2d').drawImage(image, 0, 0);
+    }
+    image.src = URL.createObjectURL(data);
 }
 
 function refresh() {
-    var path;
+    let path;
     if (!cursor) {
         path = '/image/full';
     } else {
@@ -21,29 +24,27 @@ function refresh() {
         return response.blob();
     })
     .then(blob => {
-        image.src =  URL.createObjectURL(blob)
+        drawImage(blob);
     })
 }
 
-$(document).ready(function() {
+window.onload = function() {
     canvas = document.createElement("canvas");
     document.body.appendChild(canvas);
     canvas.width  = 1000;
     canvas.height = 1000;
-    var context = canvas.getContext("2d");
     fetch('/image/full')
         .then(response => {
             cursor = response.headers.get('X-Cursor');
             return response.blob();
         })
         .then(blob => {
-            image.src =  URL.createObjectURL(blob)
+            drawImage(blob);
         })
     setInterval(refresh, 500);
-    var cl = canvas.offsetLeft + canvas.clientLeft;
-    var ct = canvas.offsetTop + canvas.clientTop;
-
-    var colorFlex = document.createElement("div");
+    let cl = canvas.offsetLeft + canvas.clientLeft;
+    let ct = canvas.offsetTop + canvas.clientTop;
+    let colorFlex = document.createElement("div");
     colorFlex.style.display = "flex";
     colorFlex.style.width = "1000px";
     colorFlex.style.height = "30px";
@@ -51,19 +52,17 @@ $(document).ready(function() {
         data => data.json()
     ).then(
         colors => colors.map((color, index) => {
-            var colorBox = document.createElement("div");
+            let colorBox = document.createElement("div");
             colorBox.style.flexGrow = "1";
             colorBox.style.backgroundColor = color[1];
             colorBox.title = color[0];
             if (!selected) {
                 selected = colorBox;
+                selected.classList.add('selected');
                 selectedColor = index;
-                colorBox.classList.add('selected');
             }
             colorBox.onclick = function() {
-                if (typeof selected !== 'undefined') {
-                    selected.classList.remove('selected');
-                }
+                selected.classList.remove('selected');
                 selected = this;
                 selected.classList.add('selected');
                 selectedColor = index;
@@ -74,10 +73,10 @@ $(document).ready(function() {
     document.body.appendChild(colorFlex);
 
     canvas.addEventListener('click', function(event) {
-        var x = event.pageX - cl,
+        let x = event.pageX - cl,
             y = event.pageY - ct;
         fetch('/image/place/' + x + '/' + y + '/' + selectedColor);
-        var ctx = canvas.getContext('2d');
+        let ctx = canvas.getContext('2d');
         ctx.beginPath();
         ctx.fillStyle = selected.style.backgroundColor;
         ctx.rect(Math.floor(x / 20) * 20, Math.floor(y / 20) * 20, 20, 20);
@@ -90,4 +89,4 @@ $(document).ready(function() {
 //        fetch('/image/clear');
 //    });
 //    document.body.appendChild(clear);
-});
+};
