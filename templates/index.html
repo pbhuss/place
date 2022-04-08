@@ -8,6 +8,18 @@
     <style>
         body {
             font-family: monospace;
+            background-color: #CCCCCC;
+        }
+        #container {
+            width: 1000px;
+        }
+        #header {
+            float: left;
+            margin-top: 0px;
+        }
+        #sha {
+            float: right;
+            margin-top: 10px;
         }
         .selected {
             border-color: black;
@@ -16,7 +28,10 @@
         }
     </style>
 </head>
-<body bgcolor="#CCCCCC">
-    <h1>pbplace</h1>
+<body>
+    <div id="container">
+        <h1 id="header">pbplace</h1>
+        <div id="sha">SHA:<a href="https://github.com/pbhuss/place/tree/{{ sha }}">{{ sha }}</a></div>
+    </div>
 </body>
 </html>

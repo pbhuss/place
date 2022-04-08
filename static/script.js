@@ -30,7 +30,7 @@ function refresh() {
 
 window.onload = function() {
     canvas = document.createElement("canvas");
-    document.body.appendChild(canvas);
+    document.getElementById("container").appendChild(canvas);
     canvas.width  = 1000;
     canvas.height = 1000;
     fetch('/image/full')
@@ -75,7 +75,15 @@ window.onload = function() {
     canvas.addEventListener('click', function(event) {
         let x = event.pageX - cl,
             y = event.pageY - ct;
-        fetch('/image/place/' + x + '/' + y + '/' + selectedColor);
+        fetch('/image/place', {
+            method: "POST",
+            body: JSON.stringify({
+                    "x": x,
+                    "y": y,
+                    "color": selectedColor
+                }),
+            headers: new Headers({"Content-Type": "application/json"})
+        }).then();
         let ctx = canvas.getContext('2d');
         ctx.beginPath();
         ctx.fillStyle = selected.style.backgroundColor;
@@ -86,7 +94,7 @@ window.onload = function() {
 //    var clear = document.createElement("button");
 //    clear.innerHTML = "Clear";
 //    clear.addEventListener('click', function(event) {
-//        fetch('/image/clear');
+//        fetch('/image/clear', {method: "POST"}).then();
 //    });
 //    document.body.appendChild(clear);
 };

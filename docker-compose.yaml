@@ -33,7 +33,7 @@ services:
       - "./:/code"
     command: ["flask", "run"]
     environment:
-      FLASK_ENVIRONMENT: development
+      FLASK_ENV: development
   nginx:
     build:
       context: .
