@@ -34,6 +34,7 @@ services:
     command: ["flask", "run"]
     environment:
       FLASK_ENV: development
+      FLASK_APP: place
   nginx:
     build:
       context: .
