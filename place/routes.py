@@ -1,7 +1,9 @@
 import subprocess
 from io import BytesIO
 
+from flask import abort
 from flask import Blueprint
+from flask import current_app
 from flask import jsonify
 from flask import make_response
 from flask import render_template
@@ -25,7 +27,7 @@ def index():
     sha = subprocess.check_output(
         ["git", "rev-parse", "--short", "HEAD"], text=True
     ).strip()
-    return render_template("index.html", sha=sha)
+    return render_template("index.html", sha=sha, env=current_app.config["ENV"])
 
 
 @bp.route("/image/full")
@@ -104,5 +106,7 @@ def colors() -> Response:
 
 @bp.route("/image/clear", methods=["POST"])
 def clear_image():
+    if current_app.config["ENV"] != "development":
+        abort(404)
     canvas.draw_square(0, 0, canvas.width, "white", True)
     return Response(status=200)

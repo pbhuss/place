@@ -17,6 +17,12 @@
             float: left;
             margin-top: 0px;
         }
+        #clearbutton {
+            {% if env != 'development' %}
+            display: none;
+            {% endif %}
+            margin-top: 10px;
+        }
         #sha {
             float: right;
             margin-top: 10px;

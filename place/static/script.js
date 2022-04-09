@@ -91,10 +91,11 @@ window.onload = function () {
         ctx.fill()
     })
 
-    // const clear = document.createElement('button')
-    // clear.innerHTML = 'Clear'
-    // clear.addEventListener('click', function (event) {
-    //   fetch('/image/clear', { method: 'POST' }).then()
-    // })
-    // document.body.appendChild(clear)
+    const clear = document.createElement('button')
+    clear.innerHTML = 'Clear'
+    clear.addEventListener('click', function (event) {
+        fetch('/image/clear', { method: 'POST' }).then()
+    })
+    clear.id = 'clearbutton'
+    document.body.appendChild(clear)
 }
