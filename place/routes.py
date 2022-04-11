@@ -36,33 +36,32 @@ def get_image_full() -> Response:
     cached_val = cache.get("full_image")
     if cached_val:
         cursor, image = cached_val
-        print(f"{cursor=}")
-        cursor, updates = canvas.get_updates(cursor)
+        update = canvas.get_update(cursor)
     else:
         image = canvas.base_image()
-        cursor, updates = canvas.refresh()
-    canvas.draw_updates(image, updates)
+        update = canvas.refresh()
+    canvas.draw_update(image, update)
 
-    cache.set("full_image", (cursor, image))
+    cache.set("full_image", (update.new_cursor, image))
 
     buffer = BytesIO()
     save_image(image, buffer)
     buffer.seek(0)
 
     response = make_response(send_file(buffer, mimetype="image/png"))
-    response.headers["X-Cursor"] = cursor
+    response.headers["X-Cursor"] = update.new_cursor
     return response
 
 
 @bp.route("/image/<int:cursor>")
 def get_image_updates(cursor: int) -> Response:
     image = canvas.base_image()
-    cursor, updates = canvas.get_updates(cursor)
-    if not updates:
+    update = canvas.get_update(cursor)
+    if not update:
         resp = Response(status=200)
         resp.headers["X-Cursor"] = cursor
         return resp
-    canvas.draw_updates(image, updates)
+    canvas.draw_update(image, update)
     buffer = BytesIO()
     save_image(image, buffer)
     buffer.seek(0)

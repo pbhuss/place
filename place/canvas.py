@@ -1,7 +1,7 @@
 from collections import defaultdict
 from collections.abc import Iterable
 from collections.abc import Iterator
-from typing import Any
+from dataclasses import dataclass
 from typing import NamedTuple
 
 import PIL.Image
@@ -45,8 +45,12 @@ class Palette:
     def __len__(self) -> int:
         return len(self._color_names)
 
-    def __contains__(self, item: Any) -> bool:
-        return item in self._color_map
+    def __contains__(self, color: Color | str) -> bool:
+        if isinstance(color, Color):
+            color_name = color.name
+        else:
+            color_name = color
+        return color_name in self._color_map
 
     def index(self, color: Color | str) -> int:
         if isinstance(color, Color):
@@ -67,8 +71,8 @@ class PaletteLoader:
         with open(path) as fp:
             self._config = yaml.safe_load(fp)
 
-    def __contains__(self, item: Any) -> bool:
-        return item in self._config
+    def __contains__(self, palette_name: str) -> bool:
+        return palette_name in self._config
 
     def load(self, name: str = "default") -> Palette:
         if name not in self:
@@ -79,6 +83,16 @@ class PaletteLoader:
 
     def for_json(self, name: str = "default") -> list[tuple[str, str]]:
         return list(self._config[name].items())
+
+
+@dataclass
+class CanvasUpdate:
+
+    new_cursor: int
+    color_positions: dict[int, list[int]]
+
+    def __bool__(self) -> bool:
+        return len(self.color_positions) > 0
 
 
 class Canvas:
@@ -123,18 +137,18 @@ class Canvas:
             bitfield.execute()
             self.redis.zadd("updates", starting)
 
-    def refresh(self) -> tuple[int, dict[int, list[int]]]:
+    def refresh(self) -> CanvasUpdate:
         cursor = self.redis.get("cursor")
         assert isinstance(cursor, bytes)
         image_bytes = self.redis.get("image")
         assert isinstance(image_bytes, bytes)
-        color_to_pos = defaultdict(list)
+        color_positions = defaultdict(list)
         for pos in range(0, self.width * self.height):
             color = image_bytes[pos]
-            color_to_pos[color].append(pos)
-        return int(cursor), color_to_pos
+            color_positions[color].append(pos)
+        return CanvasUpdate(int(cursor), color_positions)
 
-    def get_updates(self, cursor: int) -> tuple[int, dict[int, list[int]]]:
+    def get_update(self, cursor: int) -> CanvasUpdate:
         pipeline = self.redis.pipeline()
         pipeline.get("cursor")
         # str is a valid type for start and end
@@ -149,20 +163,14 @@ class Canvas:
         for pos in positions:
             bitfield.get("u8", f"#{pos.decode()}")
         colors = bitfield.execute()
-        color_to_pos = defaultdict(list)
+        color_positions = defaultdict(list)
         for color, pos in zip(colors, positions):
-            color_to_pos[color].append(int(pos))
+            color_positions[color].append(int(pos))
         new_cursor = int(new_cursor)
         if new_cursor > cursor + 1:
             # EXPERIMENTAL
             new_cursor -= 1
-        return new_cursor, color_to_pos
-
-    def get_update_image(self, cursor: int) -> tuple[int, PIL.Image.Image]:
-        image = self.base_image()
-        cursor, updates = self.get_updates(cursor)
-        self.draw_updates(image, updates)
-        return cursor, image
+        return CanvasUpdate(new_cursor, color_positions)
 
     def update_pos(self, pos: int, color: int, check: bool = False) -> int | None:
         if check:
@@ -220,13 +228,11 @@ class Canvas:
             for j in range(y, y + size):
                 self.update_pos(xy_to_pos(i, j, self.width), color_num, check=check)
 
-    def draw_updates(
-        self, image: PIL.Image.Image, color_to_pos: dict[int, list[int]]
-    ) -> None:
+    def draw_update(self, image: PIL.Image.Image, update: CanvasUpdate) -> None:
         draw = PIL.ImageDraw.Draw(image)
         width, height = image.size
         width = width // self.MULTIPLIER
-        for color, positions in color_to_pos.items():
+        for color, positions in update.color_positions.items():
             coords = [pos_to_xy(pos, width) for pos in positions]
             coords = explode_coords(coords)
             # tuple[int, int] is a valid type for fill
