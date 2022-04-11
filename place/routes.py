@@ -13,6 +13,7 @@ from flask import send_file
 
 from place import cache
 from place.canvas import canvas
+from place.canvas import palette
 from place.canvas import palette_loader
 from place.util import get_redis
 from place.util import save_image
@@ -23,7 +24,7 @@ bp = Blueprint("routes", __name__)
 
 
 @bp.route("/")
-def index():
+def index() -> str:
     sha = subprocess.check_output(
         ["git", "rev-parse", "--short", "HEAD"], text=True
     ).strip()
@@ -31,7 +32,7 @@ def index():
 
 
 @bp.route("/image/full")
-def get_image_full():
+def get_image_full() -> Response:
     cached_val = cache.get("full_image")
     if cached_val:
         cursor, image = cached_val
@@ -54,7 +55,7 @@ def get_image_full():
 
 
 @bp.route("/image/<int:cursor>")
-def get_image_updates(cursor: int):
+def get_image_updates(cursor: int) -> Response:
     image = canvas.base_image()
     cursor, updates = canvas.get_updates(cursor)
     if not updates:
@@ -71,13 +72,15 @@ def get_image_updates(cursor: int):
 
 
 @bp.route("/image/cursor")
-def get_image_cursor():
+def get_image_cursor() -> bytes:
     rc = get_redis()
-    return rc.get("cursor")
+    cursor = rc.get("cursor")
+    assert isinstance(cursor, bytes)
+    return cursor
 
 
 @bp.route("/init")
-def init():
+def init() -> str:
     rc = get_redis()
     if rc.exists("image", "cursor", "updates") == 3:
         return "Already initialized"
@@ -105,8 +108,8 @@ def colors() -> Response:
 
 
 @bp.route("/image/clear", methods=["POST"])
-def clear_image():
+def clear_image() -> Response:
     if current_app.config["ENV"] != "development":
         abort(404)
-    canvas.draw_square(0, 0, canvas.width, "white", True)
+    canvas.draw_square(0, 0, canvas.width, palette["white"], True)
     return Response(status=200)

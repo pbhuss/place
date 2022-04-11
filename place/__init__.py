@@ -11,7 +11,7 @@ config = {
 cache = Cache()
 
 
-def create_app():
+def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_mapping(config)
     cache.init_app(app)
